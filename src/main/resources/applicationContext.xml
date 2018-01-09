@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+
+<beans>
+
+    <!-- Spring JMS Template -->
+    <bean id="inputJmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+        <property name="connectionFactory">
+            <bean class="org.apache.activemq.pool.PooledConnectionFactory" destroy-method="stop">
+                <property name="connectionFactory">
+                    <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                        <property name="brokerURL">
+                            <value>failover:(ssl://b-77afc364-73df-452d-b71d-42b719f8eaa5-1.mq.us-east-1.amazonaws.com:61617,ssl://b-77afc364-73df-452d-b71d-42b719f8eaa5-2.mq.us-east-1.amazonaws.com:61617)</value>
+                        </property>
+                        <property name="userName" value="root"/>
+                        <property name="password" value="fakepassword"/>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+
+
+    <bean id="inputQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <!-- name of the queue -->
+        <constructor-arg index="0" value="inputQueue" />
+    </bean>
+
+    <bean id="outputQueue" class="org.apache.activemq.command.ActiveMQQueue">
+        <!-- name of the queue -->
+        <constructor-arg index="0" value="outputQueue" />
+    </bean>
+
+    <bean id="consumerConnectionFactory" class="org.apache.activemq.ActiveMQConnectionFactory">
+        <property name="brokerURL">
+            <value>failover:(ssl://b-77afc364-73df-452d-b71d-42b719f8eaa5-1.mq.us-east-1.amazonaws.com:61617,ssl://b-77afc364-73df-452d-b71d-42b719f8eaa5-2.mq.us-east-1.amazonaws.com:61617)</value>
+        </property>
+        <property name="userName" value="root"/>
+        <property name="password" value="fakepassword"/>
+    </bean>
+
+
+    <bean id="messageListener" class="com.rafa.mq.TestListener"/>
+
+    <bean id="jmsContainer" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+        <property name="connectionFactory" ref="consumerConnectionFactory"/>
+        <property name="destination" ref="inputQueue"/>
+        <property name="messageListener" ref="messageListener" />
+        <property name="concurrentConsumers" value="100"/>
+        <property name="cacheLevelName" value="CACHE_CONSUMER"/>
+    </bean>
+</beans>
